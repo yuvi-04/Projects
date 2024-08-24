@@ -1,0 +1,9 @@
+{
+    "env": {
+        "DB_USER": "admin",
+        "DB_PASSWORD": "Password",
+        "DB_NAME": "YourPlaces",
+        "GOOGLE_API_KEY": "AIzaSyC16hYLJyfvGOs_s8rj1dSVkgLPDV_z0rY",
+        "JWT_KEY": "SecretKey_6123"
+    }
+}
