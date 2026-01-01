@@ -3,6 +3,8 @@ package com.demo.demoproject.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.demo.demoproject.exception.ResourceNotFoundException;
@@ -17,6 +19,7 @@ public class SkillService {
     private SkillRepository skillsRepo;
 
     // CREATE skill
+    @CacheEvict(value = "skills", allEntries = true)
     public Skills createSkill(Skills skill) {
         try {
             return skillsRepo.save(skill);
@@ -26,11 +29,13 @@ public class SkillService {
     }
 
     // GET all skills
+    @Cacheable("skills")
     public List<Skills> getAllSkills() {
         return skillsRepo.findAll();
     }
 
     // UPDATE skill
+    @CacheEvict(value = "skills", allEntries = true)
     public Skills updateSkill(Long skillId, Skills updatedSkill) {
         Skills existing = skillsRepo.findById(skillId)
                 .orElseThrow(() -> new ResourceNotFoundException("Skill not found: " + skillId));
@@ -45,6 +50,7 @@ public class SkillService {
     }
 
     // DELETE skill
+    @CacheEvict(value = "skills", allEntries = true)
     public boolean deleteSkill(Long skillId) {
         if (!skillsRepo.existsById(skillId)) {
             throw new ResourceNotFoundException("Skill not found: " + skillId);
