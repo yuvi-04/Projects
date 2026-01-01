@@ -1,0 +1,8 @@
+2025-05-28 11:40:26,129 [Worker-6: Loading available Gradle versions] INFO  o.e.b.c.i.u.g.PublishedGradleVersions - Gradle version information cache is not available. Remote download required.
+2025-05-28 11:41:36,463 [Worker-2: Updating Maven Dependencies] INFO  o.e.m.c.i.l.LifecycleMappingFactory - Using org.eclipse.m2e.jdt.JarLifecycleMapping lifecycle mapping for MavenProject: com.uv:SpringBoot-Rest:0.0.1-SNAPSHOT @ D:\yuvraj\javaProgs\jobApp-SpringBoot-Backend\pom.xml.
+2025-05-28 11:41:36,463 [Worker-1: Building] INFO  o.e.m.c.i.l.LifecycleMappingFactory - Using org.eclipse.m2e.jdt.JarLifecycleMapping lifecycle mapping for MavenProject: com.uv:SpringBoot-Rest:0.0.1-SNAPSHOT @ D:\yuvraj\javaProgs\jobApp-SpringBoot-Backend\pom.xml.
+2025-05-28 11:41:42,431 [Worker-1: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 1 resource from src\main\resources to target\classes
+2025-05-28 11:41:42,719 [Worker-1: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 0 resource from src\main\resources to target\classes
+2025-05-28 11:41:42,743 [Worker-1: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - skip non existing resourceDirectory D:\yuvraj\javaProgs\jobApp-SpringBoot-Backend\src\test\resources
+2025-05-28 11:41:45,645 [Worker-35: Updating Maven Dependencies] WARN  o.e.m.c.i.markers.MarkerUtils - Could not find OSGI service for org.eclipse.m2e.core.internal.markers.IEditorMarkerService
+2025-05-28 11:41:45,902 [Worker-35: Updating Maven Dependencies] INFO  o.e.m.c.i.l.LifecycleMappingFactory - Using org.eclipse.m2e.jdt.JarLifecycleMapping lifecycle mapping for MavenProject: com.uv:SpringBoot-Rest:0.0.1-SNAPSHOT @ D:\yuvraj\javaProgs\jobApp-SpringBoot-Backend\pom.xml.

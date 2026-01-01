@@ -8,6 +8,7 @@ const path = require('path')
 const placesRoutes = require('./routes/place-routes')
 const usersRoutes = require('./routes/user-routes')
 const HttpError = require('./models/http-error')
+const checkAuth = require('./middleware/check-auth')
 
 const app = express()
 
