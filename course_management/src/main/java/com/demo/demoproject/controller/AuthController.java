@@ -2,6 +2,7 @@ package com.demo.demoproject.controller;
 
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,9 @@ import com.demo.demoproject.security.jwt.JwtUtil;
 import com.demo.demoproject.security.model.AuthUser;
 import com.demo.demoproject.security.model.Role;
 
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -38,6 +42,13 @@ public class AuthController {
     record LoginRequest(String username, String password) {}
     record LoginResponse(String token) {}
 
+    public ResponseEntity<LoginResponse> loginRateLimiter(
+        LoginRequest req, HttpServletRequest request, RequestNotPermitted ex) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(new LoginResponse("Too many Login Attempts"));
+    }
+
+    @RateLimiter(name = "loginLimiter", fallbackMethod = "loginRateLimiter")
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest req, HttpServletRequest request) {
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(req.username(), req.password());
@@ -78,7 +89,6 @@ public class AuthController {
             u.setProfile(p);
             userRepo.save(u);
         }
-
         return ResponseEntity.status(HttpStatus.CREATED).body("Successfull");
     }
 }

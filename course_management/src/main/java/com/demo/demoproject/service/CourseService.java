@@ -3,6 +3,8 @@ package com.demo.demoproject.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ public class CourseService {
     @Autowired
     private UserRepository userRepo;
 
+    @CacheEvict(value = "courses", allEntries = true)
     public Course createCourse(Course course) {
         try {
             if (course.getInstructor() != null && course.getInstructor().getId() != null) {
@@ -39,10 +42,12 @@ public class CourseService {
         }
     }
 
+    @Cacheable("courses")
     public List<Course> getAllCourses() {
         return courseRepo.findAll();
     }
 
+    @CacheEvict(value = "courses", allEntries = true)
     public Course updateCourse(Long courseId, Course course) {
         Course existing = courseRepo.findById(courseId).orElseThrow(
             () -> new ResourceNotFoundException("Course not Found" + courseId)
@@ -72,6 +77,7 @@ public class CourseService {
         }
     }
 
+    @CacheEvict(value = "courses", allEntries = true)
     public boolean deleteCourse(Long courseId) {
         if(!courseRepo.existsById(courseId))
             throw new ResourceNotFoundException("Course not found: " + courseId);

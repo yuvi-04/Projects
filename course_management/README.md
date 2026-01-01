@@ -161,3 +161,49 @@ curl -H "Authorization: Bearer <token>" http://localhost:8080/courses
 
 ## Files added
 - `.gitignore` contains sensible defaults for a Maven/Java project.
+
+
+---
+## Security Enhancements Added
+
+This project now includes the following production‑grade security features:
+
+### Rate Limiting (Resilience4j)
+- Global rate limiter applied to all routes.
+- Login‑specific rate limiter on `/auth/login` to prevent brute‑force attacks.
+
+| Scope | Limit |
+|------|-------|
+| Global APIs | 20 requests per 20 seconds |
+| Login API | 5 requests per 10 seconds |
+
+Exceeding the limit returns:
+
+```
+HTTP 429 – Too many requests. Please slow down.
+```
+
+### SQL Injection Protection
+A custom filter blocks malicious SQL patterns such as:
+
+```
+select, drop, update, delete, truncate, --, /* */, ;
+```
+
+Blocked requests return:
+
+```
+HTTP 400 – Malicious SQL input detected
+```
+
+### Caching
+Service‑layer caching is enabled to reduce database load.
+
+| Cache Name | Data Cached |
+|------------|-------------|
+| authUsers  | Authentication users for JWT |
+| users      | User + Profile + Courses |
+| courses    | All courses |
+| skills     | All skills |
+
+Caches are automatically evicted when data is modified.

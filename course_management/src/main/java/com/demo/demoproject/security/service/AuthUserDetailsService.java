@@ -3,6 +3,7 @@ package com.demo.demoproject.security.service;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,6 +21,7 @@ public class AuthUserDetailsService implements UserDetailsService {
     private AuthUserRepository authRepo;
 
     @Override
+    @Cacheable(value = "authUsers", key = "#username")
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         AuthUser au = authRepo.findByUsername(username).orElseThrow(
             () -> new UsernameNotFoundException("User not found with username: " + username)

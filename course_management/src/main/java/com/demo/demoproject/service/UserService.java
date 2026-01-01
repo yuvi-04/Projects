@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.demo.demoproject.exception.ResourceNotFoundException;
@@ -51,12 +53,14 @@ public class UserService {
     }
 
     // Get User by ID
+    @Cacheable(value = "users", key = "#userId")
     public User getUser(Long userId) {
         return userRepo.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
     }
 
     // Add Course for User
+    @CacheEvict(value = {"users", "courses"}, key = "#userId", allEntries = true)
     public Course addCourse(Long userId, Course course) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
@@ -70,6 +74,7 @@ public class UserService {
     }
 
     // Update Course for User
+    @CacheEvict(value = {"users", "courses"}, key = "#userId", allEntries = true)
     public Course updateCourse(Long userId, Long courseId, Course newCourse) {
         Course existingCourse = courseRepo.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found: " + courseId));
@@ -89,6 +94,7 @@ public class UserService {
     }
 
     // Delete Course for User
+    @CacheEvict(value = {"users", "courses"}, key = "#userId", allEntries = true)
     public boolean deleteCourse(Long userId, Long courseId) {
         Course course = courseRepo.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found: " + courseId));
@@ -102,6 +108,7 @@ public class UserService {
     }
 
     // Update User Profile
+    @CacheEvict(value = "users", key = "#userId")
     public UserProfile updateProfile(Long userId, UserProfile profile) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
@@ -123,6 +130,7 @@ public class UserService {
     }
 
     // Delete User along with Profile and Courses
+    @CacheEvict(value = "users", key = "#userId")
     public boolean deleteUser(Long userId) {
         if (!userRepo.existsById(userId)) {
             throw new ResourceNotFoundException("User not found: " + userId);
@@ -131,6 +139,7 @@ public class UserService {
         return true;
     }
 
+    @CacheEvict(value = "users", key = "#userId")
     public User addSkillToUser(Long userId, Long skillId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
@@ -147,6 +156,7 @@ public class UserService {
         }
     }
 
+    @CacheEvict(value = "users", key = "#userId")
     public User removeSkillFromUser(Long userId, Long skillId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
@@ -163,6 +173,7 @@ public class UserService {
         }
     }
 
+    @Cacheable(value = "userSkills", key = "#userId")
     public List<Skills> getUserSkills(Long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
