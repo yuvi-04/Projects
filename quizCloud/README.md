@@ -547,15 +547,15 @@ mvn spring-boot:run -Dspring-boot.run.arguments="--debug"
 ```
 quizCloud/
 ├── service-registry/              # Eureka Server (Port 8761)
-│   ├── src/main/java/com/telusko/serviceregistry/
+│   ├── src/main/java/com/uv/serviceregistry/
 │   └── src/main/resources/application.properties
 │
 ├── api-gateway/                   # API Gateway (Port 8765)
-│   ├── src/main/java/com/telusko/apigateway/
+│   ├── src/main/java/com/uv/apigateway/
 │   └── src/main/resources/application.properties
 │
 ├── question-service/              # Question APIs (Port 8081)
-│   ├── src/main/java/com/telusko/questionservice/
+│   ├── src/main/java/com/uv/questionservice/
 │   │   ├── controller/
 │   │   ├── service/
 │   │   ├── dao/
@@ -563,7 +563,7 @@ quizCloud/
 │   └── src/main/resources/application.properties
 │
 ├── quiz-service/                  # Quiz APIs (Port 8090)
-│   ├── src/main/java/com/telusko/quizservice/
+│   ├── src/main/java/com/uv/quizservice/
 │   │   ├── controller/
 │   │   ├── service/
 │   │   ├── dao/
