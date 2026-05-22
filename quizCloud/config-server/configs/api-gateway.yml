@@ -7,11 +7,11 @@ spring:
         - id: question-service-route
           uri: lb://question-service
           predicates:
-            - Path=/questions/**
+            - Path=/question/**
         - id: quiz-service-route
           uri: lb://quiz-service
           predicates:
-            - Path=/quizzes/**
+            - Path=/quiz/**
   rabbitmq:
     host: localhost
     port: 5672
@@ -44,6 +44,8 @@ management:
       endpoint: http://localhost:9411/api/v2/spans
 
 logging:
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
   level:
     root: INFO
     org.springframework: INFO

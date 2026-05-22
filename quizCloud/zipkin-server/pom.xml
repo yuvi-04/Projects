@@ -17,38 +17,24 @@
 	<properties>
 		<java.version>17</java.version>
 		<spring-cloud.version>2025.0.0</spring-cloud.version>
+		<zipkin.version>3.6.1</zipkin.version>
+		<netty.version>4.2.12.Final</netty.version>
 	</properties>
 	<dependencies>
 		<dependency>
-			<groupId>io.zipkin.java</groupId>
+			<groupId>io.zipkin</groupId>
 			<artifactId>zipkin-server</artifactId>
+			<version>${zipkin.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>io.zipkin.java</groupId>
-			<artifactId>zipkin-autoconfigure-ui</artifactId>
+			<groupId>io.zipkin</groupId>
+			<artifactId>zipkin-lens</artifactId>
+			<version>${zipkin.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.amqp</groupId>
-			<artifactId>spring-rabbit</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.java</groupId>
-			<artifactId>zipkin-autoconfigure-storage-rabbitmq</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-			<scope>runtime</scope>
-			<optional>true</optional>
+			<groupId>io.zipkin.zipkin2</groupId>
+			<artifactId>zipkin-collector-rabbitmq</artifactId>
+			<version>${zipkin.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
