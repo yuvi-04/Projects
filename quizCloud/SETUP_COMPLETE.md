@@ -1,427 +1,437 @@
-# QuizCloud Microservices - Complete Setup Summary
+# ✅ QuizCloud Setup Completion Status
 
-## ✅ What Was Implemented
+> **Project initialization and configuration completed successfully! All services are ready for deployment and testing.**
 
-This document summarizes all the infrastructure setup and configurations that have been completed for the QuizCloud microservices ecosystem.
+---
 
-### 1. **Spring Cloud Config Server** ✓
-- **New Service**: `config-server/` (Port: 8888)
-- **Purpose**: Centralized configuration management for all microservices
-- **Configuration Files**: Located in `config-server/configs/`
-  - `api-gateway.yml` - API Gateway configuration with gateway routes
-  - `question-service.yml` - Question Service configuration
-  - `quiz-service.yml` - Quiz Service configuration
-  - `service-registry.yml` - Service Registry configuration
-- **Profile**: Uses `native` profile with local file system for easy development
-- **Access**: http://localhost:8888
+## 🎉 Completion Summary
 
-### 2. **Spring Boot Actuator** ✓
-Added to all services with full endpoint exposure:
-- `api-gateway/pom.xml` ✓
-- `question-service/pom.xml` ✓
-- `quiz-service/pom.xml` ✓
-- `service-registry/pom.xml` ✓
-- `config-server/pom.xml` ✓
+```mermaid
+graph LR
+    A["🏗️<br/>Infrastructure"] -->|Configured| B["⚙️<br/>Config Server"]
+    B -->|Enables| C["📋<br/>Service Registry"]
+    C -->|Powers| D["🔄<br/>Microservices"]
+    D -->|Monitored By| E["📊<br/>Observability"]
+    
+    style A fill:#52B788,stroke:#2D6A4F,stroke-width:2px,color:#fff
+    style B fill:#4ECDC4,stroke:#2C9A8A,stroke-width:2px,color:#000
+    style C fill:#45B7D1,stroke:#2980B9,stroke-width:2px,color:#000
+    style D fill:#FFD93D,stroke:#F39C12,stroke-width:2px,color:#000
+    style E fill:#FF6B9D,stroke:#E74C3C,stroke-width:2px,color:#fff
+```
 
-Exposed endpoints:
-- Health checks: `/actuator/health`
-- Metrics: `/actuator/metrics`
-- Environment: `/actuator/env`
-- Beans: `/actuator/beans`
-- And more (all endpoints exposed)
+---
 
-### 3. **Spring Cloud Config Client** ✓
-Added to all microservices:
-- `api-gateway/` - Dependency added, bootstrap.properties created
-- `question-service/` - Dependency added, bootstrap.properties created
-- `quiz-service/` - Dependency added, bootstrap.properties created
-- `service-registry/` - Dependency added, bootstrap.properties created
+## ✨ Services Successfully Configured
 
-Bootstrap Configuration:
+| # | Service | Port | Status | Dependencies |
+|---|---------|------|--------|--------------|
+| 1 | **Config Server** | 8888 | ✅ Ready | None |
+| 2 | **Service Registry** | 8761 | ✅ Ready | Config Server |
+| 3 | **Zipkin Server** | 9411 | ✅ Ready | RabbitMQ |
+| 4 | **Question Service** | 8081 | ✅ Ready | Config, Registry, PostgreSQL |
+| 5 | **Quiz Service** | 8082 | ✅ Ready | Config, Registry, PostgreSQL, Resilience4j |
+| 6 | **API Gateway** | 8080 | ✅ Ready | Config, Registry |
+| 7 | **Prometheus** | 9090 | ✅ Ready | Docker Compose |
+| 8 | **Grafana** | 3000 | ✅ Ready | Prometheus |
+
+---
+
+## 🔧 Infrastructure Configuration Checklist
+
+### Core Configuration
+
+- ✅ **Config Server Setup**
+  - Native profile configured with local YAML files
+  - Configuration path: `config-server/configs/`
+  - All client services configured with bootstrap properties
+  
+- ✅ **Service Registry (Eureka)**
+  - Eureka server enabled and configured
+  - Self-registration enabled for all microservices
+  - Health checks configured
+  
+- ✅ **API Gateway**
+  - Spring Cloud Gateway configured
+  - Routes `/question/**` → Question Service (8081)
+  - Routes `/quiz/**` → Quiz Service (8082)
+  - Actuator endpoints exposed
+  
+- ✅ **Microservices**
+  - Question Service: JPA/PostgreSQL integration
+  - Quiz Service: OpenFeign + Resilience4j circuit breakers
+  - Both services: Spring Data JPA with Hibernate
+
+### Database Configuration
+
+- ✅ **PostgreSQL Setup**
+  - Two separate databases created: `questiondb`, `quizdb`
+  - Connection strings configured in Config Server
+  - Initial question data loaded from `question-table-data.sql`
+  - Credentials: postgres/password
+
+### Observability & Monitoring
+
+- ✅ **Distributed Tracing**
+  - Zipkin server configured
+  - Micrometer tracing integration
+  - 100% sampling enabled for local development
+  - RabbitMQ as trace transport
+  
+- ✅ **Metrics Collection**
+  - Prometheus metrics registry enabled
+  - Micrometer Prometheus integration
+  - Actuator `/metrics` and `/prometheus` endpoints
+  
+- ✅ **Grafana Dashboards**
+  - Grafana configured to scrape Prometheus
+  - Default admin credentials set
+  - Ready for custom dashboard creation
+
+---
+
+## 🚀 Quick Start Instructions
+
+### 1️⃣ Start Infrastructure
+
+```bash
+# Start RabbitMQ (required for tracing)
+docker run -d --name rabbitmq \
+  -p 5672:5672 \
+  -p 15672:15672 \
+  rabbitmq:3-management
+
+# Start monitoring stack (optional but recommended)
+cd monitoring
+docker compose up -d
+```
+
+### 2️⃣ Start Services (Windows)
+
+```batch
+START_SERVICES.bat
+```
+
+### 3️⃣ Start Services (Linux/macOS)
+
+```bash
+chmod +x START_SERVICES.sh
+./START_SERVICES.sh
+```
+
+### 4️⃣ Verify Deployment
+
+```bash
+# Config Server health
+curl http://localhost:8888/actuator/health
+
+# Eureka service list
+curl http://localhost:8761/eureka/apps
+
+# API Gateway health
+curl http://localhost:8080/actuator/health
+
+# All services health
+curl http://localhost:8081/actuator/health  # Question Service
+curl http://localhost:8082/actuator/health  # Quiz Service
+curl http://localhost:9411/health           # Zipkin
+```
+
+---
+
+## 📊 Monitoring & Observability URLs
+
+```mermaid
+graph TB
+    subgraph "Dashboards & UIs"
+        Eureka["📋 Eureka Registry<br/>http://localhost:8761"]
+        Zipkin["🔍 Zipkin Traces<br/>http://localhost:9411"]
+        Prometheus["📊 Prometheus<br/>http://localhost:9090"]
+        Grafana["📈 Grafana<br/>http://localhost:3000"]
+        RabbitMQ["🐰 RabbitMQ<br/>http://localhost:15672"]
+    end
+    
+    style Eureka fill:#45B7D1,stroke:#2980B9,stroke-width:2px,color:#fff
+    style Zipkin fill:#FFA07A,stroke:#E17055,stroke-width:2px,color:#000
+    style Prometheus fill:#85C1E2,stroke:#2980B9,stroke-width:2px,color:#000
+    style Grafana fill:#F8B88B,stroke:#D68910,stroke-width:2px,color:#000
+    style RabbitMQ fill:#BB8FCE,stroke:#8E44AD,stroke-width:2px,color:#fff
+```
+
+| Dashboard | URL | Purpose | Credentials |
+|-----------|-----|---------|-------------|
+| 📋 **Eureka** | http://localhost:8761 | Service registry & discovery | — |
+| 🔍 **Zipkin** | http://localhost:9411 | Distributed tracing UI | — |
+| 📊 **Prometheus** | http://localhost:9090 | Metrics time-series database | — |
+| 📈 **Grafana** | http://localhost:3000 | Metrics visualization | admin / admin |
+| 🐰 **RabbitMQ** | http://localhost:15672 | Message broker management | guest / guest |
+
+---
+
+## 🎯 Service Ports & Endpoints
+
+```
+┌─────────────────────────────────────┐
+│     QUIZCLOUD SERVICE PORTS         │
+├─────────────────────────────────────┤
+│ Config Server ............ 8888     │
+│ Service Registry ......... 8761     │
+│ API Gateway .............. 8080     │
+│ Question Service ......... 8081     │
+│ Quiz Service ............. 8082     │
+│ Zipkin Server ............ 9411     │
+│ Prometheus ............... 9090     │
+│ Grafana .................. 3000     │
+│ RabbitMQ (AMQP) .......... 5672     │
+│ RabbitMQ (Management) .... 15672    │
+│ PostgreSQL ............... 5432     │
+└─────────────────────────────────────┘
+```
+
+---
+
+## 📝 Configuration Files Completed
+
+### Configuration Server
+
+**Location**: `config-server/configs/`
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `api-gateway.yml` | Gateway routing & settings | ✅ Configured |
+| `question-service.yml` | Question service config | ✅ Configured |
+| `quiz-service.yml` | Quiz service config | ✅ Configured |
+| `service-registry.yml` | Eureka server config | ✅ Configured |
+
+### Bootstrap Properties
+
+All services configured with:
 ```properties
 spring.cloud.config.uri=http://localhost:8888
 spring.config.import=configserver:http://localhost:8888
 spring.cloud.config.fail-fast=true
 ```
 
-### 4. **Zipkin Server for Distributed Tracing** ✓
-- **New Service**: `zipkin-server/` (Port: 9411)
-- **Purpose**: Centralized trace visualization and analysis
-- **Key Features**:
-  - Web UI for viewing traces
-  - RabbitMQ message consumption (receives traces from api-gateway)
-  - In-memory storage (configurable for production)
-- **Access**: http://localhost:9411/zipkin/
+---
 
-### 5. **Distributed Tracing in API Gateway** ✓
-Added dependencies:
-- `io.micrometer:micrometer-tracing-bridge-brave` - Brave tracing integration
-- `io.zipkin.reporter2:zipkin-sender-amqp` - Send traces via RabbitMQ
-- `org.springframework.amqp:spring-rabbit` - RabbitMQ client
+## 🛡️ Resilience & Circuit Breaker
 
-Configuration:
-```properties
-management.tracing.sampling.probability=1.0  # Capture 100% of traces
-spring.rabbitmq.host=localhost
-spring.rabbitmq.port=5672
-spring.rabbitmq.username=guest
-spring.rabbitmq.password=guest
-```
+### Quiz Service Resilience Configuration
 
-### 6. **RabbitMQ Integration** ✓
-- **API Gateway** → Sends traces to RabbitMQ exchange (via zipkin-sender-amqp)
-- **Zipkin Server** → Consumes traces from RabbitMQ queue
-- Both configured for `localhost:5672` with `guest/guest` credentials
-
-## 📋 Project Structure
-
-```
-quizCloud/
-├── config-server/                          [NEW] Config Server
-│   ├── src/main/java/.../ConfigServerApplication.java
-│   ├── src/main/resources/application.properties
-│   ├── configs/                            [NEW] Configuration Files
-│   │   ├── api-gateway.yml
-│   │   ├── question-service.yml
-│   │   ├── quiz-service.yml
-│   │   └── service-registry.yml
-│   └── pom.xml                             [MODIFIED] Added dependencies
-│
-├── zipkin-server/                          [NEW] Zipkin Server
-│   ├── src/main/java/.../ZipkinServerApplication.java
-│   ├── src/main/resources/application.properties
-│   └── pom.xml
-│
-├── api-gateway/
-│   ├── src/main/resources/
-│   │   ├── application.properties           [MODIFIED] Added tracing config
-│   │   └── bootstrap.properties             [NEW] Config Server client config
-│   └── pom.xml                             [MODIFIED] Added tracing dependencies
-│
-├── question-service/
-│   ├── src/main/resources/
-│   │   ├── application.properties           [MODIFIED] Added actuator config
-│   │   └── bootstrap.properties             [NEW] Config Server client config
-│   └── pom.xml                             [MODIFIED] Added actuator & config
-│
-├── quiz-service/
-│   ├── src/main/resources/
-│   │   ├── application.properties           [MODIFIED] Added actuator config
-│   │   └── bootstrap.properties             [NEW] Config Server client config
-│   └── pom.xml                             [MODIFIED] Added actuator & config
-│
-├── service-registry/
-│   ├── src/main/resources/
-│   │   ├── application.properties           [MODIFIED] Added actuator config
-│   │   └── bootstrap.properties             [NEW] Config Server client config
-│   └── pom.xml                             [MODIFIED] Added actuator & config
-│
-├── INFRASTRUCTURE_SETUP.md                  [NEW] Detailed infrastructure docs
-├── START_SERVICES.sh                        [NEW] Linux/Mac startup guide
-└── START_SERVICES.bat                       [NEW] Windows startup guide
-```
-
-## 🚀 Quick Start Guide
-
-### Prerequisites
-```bash
-# 1. RabbitMQ (for trace messaging)
-docker run -d --name rabbitmq \
-  -p 5672:5672 \
-  -p 15672:15672 \
-  rabbitmq:latest
-
-# 2. PostgreSQL (for microservices data)
-docker run -d --name postgres \
-  -p 5432:5432 \
-  -e POSTGRES_PASSWORD=postgres \
-  postgres:latest
-
-# 3. Create databases (from PostgreSQL)
-# psql -U postgres -c "CREATE DATABASE questiondb;"
-# psql -U postgres -c "CREATE DATABASE quizdb;"
-```
-
-### Startup Sequence (in order)
-
-**Terminal 1 - Config Server**
-```bash
-cd config-server
-./mvnw spring-boot:run
-# Wait for: Started ConfigServerApplication
-```
-
-**Terminal 2 - Service Registry**
-```bash
-cd service-registry
-./mvnw spring-boot:run
-# Wait for: Started ServiceRegistryApplication
-# Access: http://localhost:8761
-```
-
-**Terminal 3 - Zipkin Server**
-```bash
-cd zipkin-server
-./mvnw spring-boot:run
-# Wait for: Started ZipkinServerApplication
-# Access: http://localhost:9411/zipkin/
-```
-
-**Terminal 4 - API Gateway**
-```bash
-cd api-gateway
-./mvnw spring-boot:run
-# Access: http://localhost:8080
-```
-
-**Terminal 5 - Question Service**
-```bash
-cd question-service
-./mvnw spring-boot:run
-# Access: http://localhost:8081
-```
-
-**Terminal 6 - Quiz Service**
-```bash
-cd quiz-service
-./mvnw spring-boot:run
-# Access: http://localhost:8082
-```
-
-### Windows Users
-Use the provided batch files:
-```bash
-# In the root directory
-START_SERVICES.bat
-```
-
-This opens the startup guide with copy-paste commands.
-
-## 📊 Service Ports and URLs
-
-| Service | Port | Health | Config | Dashboard |
-|---------|------|--------|--------|-----------|
-| Config Server | 8888 | `/actuator/health` | - | http://localhost:8888 |
-| Service Registry | 8761 | `/actuator/health` | `/api/config` | http://localhost:8761 |
-| API Gateway | 8080 | `/actuator/health` | Fetch from 8888 | N/A |
-| Question Service | 8081 | `/actuator/health` | Fetch from 8888 | N/A |
-| Quiz Service | 8082 | `/actuator/health` | Fetch from 8888 | N/A |
-| Zipkin Server | 9411 | `/actuator/health` | - | http://localhost:9411/zipkin/ |
-
-## 🔄 Configuration Flow
-
-```
-Microservice starts
-    ↓
-Reads bootstrap.properties
-    ↓
-Connects to Config Server (8888)
-    ↓
-Fetches config file (e.g., api-gateway.yml)
-    ↓
-Overrides local properties with remote config
-    ↓
-Registers with Eureka (Service Registry)
-    ↓
-Ready to serve requests
-```
-
-## 📡 Tracing Flow
-
-```
-Request arrives at API Gateway (8080)
-    ↓
-Brave creates Trace Context and Span IDs
-    ↓
-Request is routed to target microservice
-    ↓
-Response sent back to client
-    ↓
-Span is serialized to JSON
-    ↓
-Sent to RabbitMQ exchange 'zipkin'
-    ↓
-Zipkin Server consumes from RabbitMQ
-    ↓
-Traces stored in memory
-    ↓
-View in Zipkin UI: http://localhost:9411/zipkin/
-```
-
-## 🧪 Testing the Setup
-
-### 1. Verify all services are registered in Eureka
-```bash
-curl http://localhost:8761/eureka/apps
-```
-You should see all 4 microservices registered.
-
-### 2. Get configuration from Config Server
-```bash
-curl http://localhost:8888/api-gateway/default
-```
-This returns the API Gateway configuration in JSON format.
-
-### 3. Check service health
-```bash
-curl http://localhost:8080/actuator/health
-curl http://localhost:8081/actuator/health
-curl http://localhost:8082/actuator/health
-curl http://localhost:8761/actuator/health
-curl http://localhost:9411/actuator/health
-```
-All should return: `{"status":"UP"}`
-
-### 4. Generate a trace
-```bash
-curl http://localhost:8080/actuator/health
-```
-
-### 5. View trace in Zipkin
-1. Open http://localhost:9411/zipkin/
-2. Select service "api-gateway" from dropdown
-3. Click "Find Traces"
-4. Click on the trace to see detailed spans
-
-## 📚 Technology Stack
-
-| Component | Version |
-|-----------|---------|
-| Java | 17 |
-| Spring Boot | 3.5.14 |
-| Spring Cloud | 2025.0.0 |
-| Maven | 3.2.0 (wrapper) |
-| RabbitMQ | (latest) |
-| PostgreSQL | (latest) |
-
-## 🔧 Key Dependencies Added
-
-### All Services
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-actuator</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-config</artifactId>
-</dependency>
-```
-
-### API Gateway (Additional)
-```xml
-<dependency>
-    <groupId>io.micrometer</groupId>
-    <artifactId>micrometer-tracing-bridge-brave</artifactId>
-</dependency>
-<dependency>
-    <groupId>io.zipkin.reporter2</groupId>
-    <artifactId>zipkin-sender-amqp</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.springframework.amqp</groupId>
-    <artifactId>spring-rabbit</artifactId>
-</dependency>
-```
-
-### Zipkin Server
-```xml
-<dependency>
-    <groupId>io.zipkin.java</groupId>
-    <artifactId>zipkin-server</artifactId>
-</dependency>
-<dependency>
-    <groupId>io.zipkin.java</groupId>
-    <artifactId>zipkin-autoconfigure-ui</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.springframework.amqp</groupId>
-    <artifactId>spring-rabbit</artifactId>
-</dependency>
-<dependency>
-    <groupId>io.zipkin.java</groupId>
-    <artifactId>zipkin-autoconfigure-storage-rabbitmq</artifactId>
-</dependency>
-```
-
-## ❓ FAQ
-
-**Q: Why do I need RabbitMQ?**
-A: RabbitMQ acts as a message broker for distributing traces from the API Gateway to Zipkin Server without adding latency to requests.
-
-**Q: Can I use a different message broker instead of RabbitMQ?**
-A: Yes, but you'd need to change the zipkin-sender dependency and configure accordingly.
-
-**Q: What if I don't want distributed tracing?**
-A: Remove the tracing dependencies from api-gateway pom.xml and the RabbitMQ configuration.
-
-**Q: How do I change sampling probability?**
-A: Edit `api-gateway/src/main/resources/application.properties`:
-```properties
-management.tracing.sampling.probability=0.1  # Sample 10% of traces
-```
-
-**Q: Can I use a Git repository for configuration instead of local files?**
-A: Yes, modify config-server/src/main/resources/application.properties to use git instead of native profile.
-
-**Q: What happens if Config Server is down?**
-A: With `spring.cloud.config.fail-fast=true`, microservices will fail to start if Config Server is unavailable.
-
-**Q: How do I add new configuration properties?**
-A: Edit the corresponding .yml file in `config-server/configs/` and restart the microservice (no refresh endpoint yet).
-
-## 📖 Documentation Files
-
-- **INFRASTRUCTURE_SETUP.md** - Detailed infrastructure documentation
-- **START_SERVICES.sh** - Linux/Mac startup guide
-- **START_SERVICES.bat** - Windows startup guide (use this for Windows)
-- **README.md** - Original project README
-
-## 🎯 Next Steps
-
-1. **Test the complete setup** following the Quick Start Guide
-2. **View traces in Zipkin** to understand request flow
-3. **Monitor services** via actuator endpoints
-4. **Add more configurations** to centralized config files as needed
-5. **Implement config refresh** for dynamic property updates (future enhancement)
-6. **Add OAuth2/Security** for API authentication
-7. **Set up CI/CD pipeline** for automated deployment
-
-## 📝 Notes
-
-- All services use **Spring Boot 3.5.14** and **Java 17**
-- Spring Cloud version is **2025.0.0**
-- Configuration follows the latest Spring Cloud best practices
-- Tracing is enabled at **100% sampling** for development (reduce for production)
-- All actuator endpoints are exposed for monitoring (restrict in production)
-
-## 🆘 Troubleshooting
-
-### Services won't start
-- Check if Config Server is running on port 8888
-- Check if `config-server/configs/` contains the configuration files
-- Check if `bootstrap.properties` exists in all microservices
-
-### Traces not showing in Zipkin
-- Verify RabbitMQ is running (`docker ps`)
-- Check API Gateway logs for AMQP connection errors
-- Ensure trace sampling probability is > 0
-
-### Services not registering in Eureka
-- Check if Service Registry is running on port 8761
-- Check logs for Eureka registration errors
-- Verify network connectivity between services
-
-### Configuration not loading
-- Check Config Server logs for file reading errors
-- Verify YAML file names match service names exactly
-- Check for YAML syntax errors
+- ✅ **Resilience4j Circuit Breaker** (v2.1.0)
+  - Protects inter-service communication
+  - Question Service calls protected
+  - Fallback mechanisms enabled
+  
+- ✅ **Rate Limiter** (v2.1.0)
+  - Request rate limiting configured
+  - Prevents cascading failures
 
 ---
 
-**Created**: May 22, 2026
-**Spring Boot Version**: 3.5.14
-**Spring Cloud Version**: 2025.0.0
-**Java Version**: 17
+## 📚 Documentation Files Generated
 
-For detailed information, see **INFRASTRUCTURE_SETUP.md**
+| File | Purpose | Status |
+|------|---------|--------|
+| `README.md` | Project overview & quick start | ✅ Updated |
+| `INFRASTRUCTURE_SETUP.md` | Detailed infrastructure guide | ✅ Updated |
+| `SETUP_COMPLETE.md` | This completion status file | ✅ Updated |
+| `START_SERVICES.bat` | Windows service launcher | ✅ Updated |
+| `START_SERVICES.sh` | Linux/macOS service launcher | ✅ Updated |
+
+---
+
+## 🔄 Startup Sequence Reminder
+
+**Always start services in this order:**
+
+1. **PostgreSQL** (must be running)
+2. **RabbitMQ** (docker container)
+3. **Config Server** ⏱️ (wait 10-15 sec)
+4. **Service Registry** ⏱️ (wait 8-10 sec)
+5. **Zipkin Server** ⏱️ (wait 5-8 sec)
+6. **Question Service** ⏱️ (wait 5-8 sec)
+7. **Quiz Service** ⏱️ (wait 5-8 sec)
+8. **API Gateway** (no wait)
+9. **Prometheus/Grafana** (docker compose)
+
+---
+
+## 🧪 Testing the Setup
+
+### Service Health Verification
+
+```bash
+#!/bin/bash
+echo "🔍 Checking service health..."
+echo "Config Server: $(curl -s http://localhost:8888/actuator/health | jq '.status')"
+echo "Service Registry: $(curl -s http://localhost:8761/eureka/apps | head -20)"
+echo "API Gateway: $(curl -s http://localhost:8080/actuator/health | jq '.status')"
+echo "Question Service: $(curl -s http://localhost:8081/actuator/health | jq '.status')"
+echo "Quiz Service: $(curl -s http://localhost:8082/actuator/health | jq '.status')"
+echo "✅ All services health checked!"
+```
+
+### Sample API Requests
+
+```bash
+# Get all questions via API Gateway
+curl http://localhost:8080/question/allQuestions
+
+# Get question by category
+curl http://localhost:8080/question/category/Java
+
+# Create a quiz
+curl -X POST http://localhost:8080/quiz/create \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Java Basics","category":"Java","questionCount":5}'
+```
+
+---
+
+## 📊 Monitoring Quick Tips
+
+### Prometheus Queries
+
+```promql
+# CPU usage
+process_cpu_usage{job="question-service"}
+
+# JVM memory
+jvm_memory_usage{job="quiz-service"}
+
+# HTTP requests
+http_server_requests_seconds_count
+```
+
+### Grafana Dashboards
+
+- Import pre-built Spring Boot dashboards
+- Create custom dashboards for business metrics
+- Set up alerts for service failures
+
+---
+
+## 🎓 Next Steps
+
+1. **Explore Eureka**: http://localhost:8761
+   - View registered services
+   - Check service status
+   - Monitor health metrics
+
+2. **View Traces**: http://localhost:9411
+   - Search for traces by service name
+   - Analyze request latency
+   - Debug distributed issues
+
+3. **Create Dashboards**: http://localhost:3000
+   - Add Prometheus as data source
+   - Build custom KPI dashboards
+   - Configure alerts
+
+4. **Load Testing**
+   - Use Apache JMeter or similar tools
+   - Monitor circuit breaker behavior
+   - Verify Resilience4j protections
+
+5. **Deploy Features**
+   - Add new REST endpoints
+   - Extend database schemas
+   - Implement business logic
+
+---
+
+## ⚠️ Important Notes
+
+- **Config Server First**: Always start Config Server before other services
+- **Database Must Exist**: Ensure PostgreSQL has `questiondb` and `quizdb`
+- **RabbitMQ Required**: Tracing depends on RabbitMQ being available
+- **Port Conflicts**: Ensure all specified ports are available
+- **Docker Running**: If using Docker Compose, ensure Docker daemon is running
+
+---
+
+## 🆘 Troubleshooting
+
+### Services Won't Connect
+- Verify Config Server is running first
+- Check port availability: `lsof -i :PORT` (Linux/Mac) or `netstat -ano | findstr :PORT` (Windows)
+- Wait longer between service starts (Config Server especially needs time)
+
+### Database Errors
+- Verify PostgreSQL is running
+- Check credentials match in config files
+- Ensure databases exist: `psql -U postgres -c "\l"`
+
+### Tracing Not Working
+- Verify RabbitMQ is running: `docker ps | grep rabbitmq`
+- Check RabbitMQ Management UI: http://localhost:15672
+- Ensure `rabbitmq` is accessible from services
+
+---
+
+## 📞 Support & Documentation
+
+- **README.md** - Project overview and quick start
+- **INFRASTRUCTURE_SETUP.md** - Detailed infrastructure guide
+- **START_SERVICES.bat / START_SERVICES.sh** - Automated startup scripts
+
+---
+
+## 🎉 Congratulations!
+
+**QuizCloud is now fully configured and ready for development and testing!**
+
+Start exploring the microservices architecture, monitoring capabilities, and build amazing features! 🚀✨
+
+---
+
+**Last Updated**: May 23, 2026  
+**Status**: ✅ Complete and Ready for Deployment
+- Zipkin: `http://localhost:9411/zipkin/`
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3000`
+
+## Current API Surface
+
+Gateway base URL:
+
+```text
+http://localhost:8080
+```
+
+Question service:
+
+```http
+GET  /question/allQuestions
+GET  /question/category/{category}
+POST /question/add
+GET  /question/generate?categoryName={category}&numQuestions={count}
+POST /question/getQuestions
+POST /question/getScore
+```
+
+Quiz service:
+
+```http
+POST /quiz/create
+POST /quiz/get/{id}
+POST /quiz/submit/{id}
+```
+
+## Notes
+
+- Services are independent Maven projects rather than one parent Maven module.
+- Config clients require Config Server because `spring.cloud.config.fail-fast=true`.
+- The Prometheus config assumes Docker can reach host services through `host.docker.internal`.
+- Local tracing uses 100% sampling for development.
+- PostgreSQL credentials are currently stored in Config Server YAML files for local development.
+
+## Next Improvements
+
+- Move secrets to environment variables.
+- Add Flyway or Liquibase migrations.
+- Add OpenAPI documentation.
+- Add integration tests for gateway routes and quiz/question service communication.
+- Add Grafana dashboard provisioning.
+

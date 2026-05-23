@@ -1,96 +1,172 @@
-#!/bin/bash
-# QuizCloud Microservices Startup Script
-# This script demonstrates the order to start all services
+#!/usr/bin/env bash
+################################################################################
+# QuizCloud Microservices Launcher - Linux/macOS
+################################################################################
+# This script starts all QuizCloud services in the correct startup order.
+# Each service runs in its own terminal window for easy monitoring.
+################################################################################
 
-echo "=========================================="
-echo "QuizCloud Microservices Startup Guide"
-echo "=========================================="
-echo ""
+set -euo pipefail
 
-echo "PREREQUISITES:"
-echo "1. RabbitMQ must be running on localhost:5672"
-echo "2. PostgreSQL must be running on localhost:5432"
-echo "3. Java 17 must be installed"
-echo "4. Each service needs a separate terminal window"
-echo ""
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "STARTUP SEQUENCE:"
-echo ""
+# ============================================================================
+# Color codes for output
+# ============================================================================
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
 
-echo "Step 1: Start Config Server (Port: 8888)"
-echo "Command: cd config-server && ./mvnw spring-boot:run"
-echo "Wait for: 'Started ConfigServerApplication'"
-echo ""
+# ============================================================================
+# Service Configuration
+# ============================================================================
+commands=(
+  "cd \"$ROOT_DIR/config-server\" && mvn spring-boot:run"
+  "cd \"$ROOT_DIR/service-registry\" && mvn spring-boot:run"
+  "cd \"$ROOT_DIR/zipkin-server\" && mvn spring-boot:run"
+  "cd \"$ROOT_DIR/question-service\" && mvn spring-boot:run"
+  "cd \"$ROOT_DIR/quiz-service\" && mvn spring-boot:run"
+  "cd \"$ROOT_DIR/api-gateway\" && mvn spring-boot:run"
+)
 
-echo "Step 2: Start Service Registry/Eureka (Port: 8761)"
-echo "Command: cd service-registry && ./mvnw spring-boot:run"
-echo "Wait for: 'Started ServiceRegistryApplication'"
-echo "Dashboard: http://localhost:8761"
-echo ""
+titles=(
+  "🟢 Config Server :8888"
+  "🟡 Service Registry :8761"
+  "🟣 Zipkin Server :9411"
+  "🔵 Question Service :8081"
+  "🟠 Quiz Service :8082"
+  "🔴 API Gateway :8080"
+)
 
-echo "Step 3: Start Zipkin Server (Port: 9411)"
-echo "Command: cd zipkin-server && ./mvnw spring-boot:run"
-echo "Wait for: 'Started ZipkinServerApplication'"
-echo "Dashboard: http://localhost:9411/zipkin/"
-echo ""
+delays=(12 10 8 5 5 0)
 
-echo "Step 4: Start API Gateway (Port: 8080)"
-echo "Command: cd api-gateway && ./mvnw spring-boot:run"
-echo "Wait for: 'Netty started with reactor.netty.http.server.HttpServer'"
+# ============================================================================
+# Print banner
+# ============================================================================
+clear
 echo ""
-
-echo "Step 5: Start Question Service (Port: 8081)"
-echo "Command: cd question-service && ./mvnw spring-boot:run"
-echo "Wait for: 'Started QuestionServiceApplication'"
-echo ""
-
-echo "Step 6: Start Quiz Service (Port: 8082)"
-echo "Command: cd quiz-service && ./mvnw spring-boot:run"
-echo "Wait for: 'Started QuizServiceApplication'"
-echo ""
-
-echo "=========================================="
-echo "VERIFICATION"
-echo "=========================================="
-echo ""
-echo "After all services are running, verify:"
-echo ""
-echo "1. Config Server Health:"
-echo "   curl http://localhost:8888/actuator/health"
-echo ""
-echo "2. Eureka Dashboard:"
-echo "   http://localhost:8761/"
-echo ""
-echo "3. Service Endpoints:"
-echo "   - API Gateway: http://localhost:8080/actuator/health"
-echo "   - Question Service: http://localhost:8081/actuator/health"
-echo "   - Quiz Service: http://localhost:8082/actuator/health"
-echo ""
-echo "4. Zipkin Tracing:"
-echo "   http://localhost:9411/zipkin/"
-echo ""
-echo "5. Make an API Request (generates trace):"
-echo "   curl http://localhost:8080/actuator/health"
-echo ""
-echo "Then view trace in Zipkin UI"
+echo "╔════════════════════════════════════════════════════════════════════════╗"
+echo "║                                                                        ║"
+echo "║        ☁️  QuizCloud Microservices Platform - Linux/macOS Launcher    ║"
+echo "║                                                                        ║"
+echo "╚════════════════════════════════════════════════════════════════════════╝"
 echo ""
 
-echo "=========================================="
-echo "USEFUL COMMANDS"
-echo "=========================================="
+# ============================================================================
+# Prerequisites display
+# ============================================================================
+echo -e "${CYAN}✓ Prerequisites Check:${NC}"
 echo ""
-echo "View all microservices registered in Eureka:"
-echo "  curl http://localhost:8761/eureka/apps"
+echo "  [✓] PostgreSQL running on localhost:5432 with:"
+echo "      - Database: questiondb (with data)"
+echo "      - Database: quizdb"
+echo "      - Credentials: postgres/password"
 echo ""
-echo "Get API Gateway configuration:"
-echo "  curl http://localhost:8888/api-gateway/default"
+echo "  [✓] RabbitMQ running on localhost:5672"
+echo "      To start: docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management"
 echo ""
-echo "Get all actuator endpoints:"
-echo "  curl http://localhost:8080/actuator"
+echo "  [✓] Java 17+ and Maven available"
+echo "      To verify: java -version && mvn -version"
 echo ""
-echo "View metrics:"
-echo "  curl http://localhost:8080/actuator/metrics"
+echo "  [?] Optional - Prometheus/Grafana monitoring stack"
+echo "      To start: cd monitoring && docker compose up -d"
 echo ""
-echo "View environment properties:"
-echo "  curl http://localhost:8080/actuator/env"
+
+# ============================================================================
+# Function to open terminal
+# ============================================================================
+open_terminal() {
+  local title="$1"
+  local command="$2"
+
+  if command -v gnome-terminal >/dev/null 2>&1; then
+    gnome-terminal --title="$title" -- bash -lc "$command; exec bash" &
+    return 0
+  elif command -v konsole >/dev/null 2>&1; then
+    konsole --new-tab --title "$title" -e bash -lc "$command; exec bash" &
+    return 0
+  elif command -v xterm >/dev/null 2>&1; then
+    xterm -T "$title" -e bash -lc "$command; exec bash" &
+    return 0
+  elif command -v osascript >/dev/null 2>&1; then
+    osascript -e "tell application \"Terminal\" to do script \"$command\"" &
+    return 0
+  else
+    return 1
+  fi
+}
+
+# ============================================================================
+# Start services
+# ============================================================================
+echo -e "${GREEN}🚀 Starting QuizCloud Services...${NC}"
+echo ""
+
+terminal_found=true
+
+for i in "${!commands[@]}"; do
+  service_num=$((i + 1))
+  echo -e "${YELLOW}Phase $service_num: ${titles[$i]}${NC}"
+  
+  if ! open_terminal "${titles[$i]}" "${commands[$i]}"; then
+    terminal_found=false
+    break
+  fi
+  
+  if [[ "${delays[$i]}" != "0" ]]; then
+    echo "⏳ Waiting ${delays[$i]} seconds for service startup..."
+    sleep "${delays[$i]}"
+  fi
+  echo ""
+done
+
+# ============================================================================
+# Display results
+# ============================================================================
+echo ""
+echo "╔════════════════════════════════════════════════════════════════════════╗"
+echo "║                                                                        ║"
+echo "║                    ✨ Service Launch Complete! ✨                      ║"
+echo "║                                                                        ║"
+echo "╚════════════════════════════════════════════════════════════════════════╝"
+echo ""
+
+if [[ "$terminal_found" == false ]]; then
+  echo -e "${RED}⚠️  No supported terminal emulator found!${NC}"
+  echo ""
+  echo "Please start these services manually in separate terminals:"
+  echo ""
+  for i in "${!commands[@]}"; do
+    echo -e "${CYAN}${titles[$i]}:${NC}"
+    echo "  ${commands[$i]}"
+    echo ""
+  done
+else
+  echo -e "${CYAN}📊 Monitoring & Dashboards:${NC}"
+  echo ""
+  echo "  📋 Eureka Service Registry   http://localhost:8761"
+  echo "  🔍 Zipkin Distributed Tracing http://localhost:9411"
+  echo "  📊 Prometheus Metrics        http://localhost:9090"
+  echo "  📈 Grafana Dashboards        http://localhost:3000 (admin/admin)"
+  echo "  🐰 RabbitMQ Management       http://localhost:15672 (guest/guest)"
+  echo ""
+  echo -e "${CYAN}🏥 Health Checks:${NC}"
+  echo ""
+  echo "  Config Server:   curl http://localhost:8888/actuator/health"
+  echo "  Service Registry: curl http://localhost:8761/eureka/apps"
+  echo "  API Gateway:     curl http://localhost:8080/actuator/health"
+  echo "  Question Service: curl http://localhost:8081/actuator/health"
+  echo "  Quiz Service:    curl http://localhost:8082/actuator/health"
+  echo "  Zipkin Server:   curl http://localhost:9411/health"
+  echo ""
+  echo -e "${GREEN}⏳ Please wait 30-60 seconds for all services to fully boot.${NC}"
+  echo -e "${YELLOW}📝 Each service is running in its own terminal window above.${NC}"
+  echo ""
+fi
+
+echo -e "${GREEN}🚀 Happy quizzing! 🎯✨${NC}"
 echo ""

@@ -1,724 +1,400 @@
-# QuizCloud
+# ☁️ QuizCloud - Microservices Platform
 
-<div align="center">
-
-![Java 17](https://img.shields.io/badge/Java-17-ED8B00?style=flat-square&logo=java)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.14-6DB33F?style=flat-square&logo=spring-boot)
-![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.0.0-6DB33F?style=flat-square&logo=spring)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-336791?style=flat-square&logo=postgresql)
-![Maven](https://img.shields.io/badge/Maven-3.8+-C71A36?style=flat-square&logo=apache-maven)
-![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
-
-**Enterprise-grade Microservices Platform for Quiz Management**
-
-A scalable, cloud-native microservices architecture built with Spring Boot and Spring Cloud. Designed for high availability, performance, and maintainability.
-
-</div>
-
----
-
-## 📑 Quick Navigation
-
-- [Overview](#overview)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Running Services](#running-services)
-- [API Reference](#api-reference)
-- [Development](#development)
-- [Troubleshooting](#troubleshooting)
+> **A modern Spring Boot microservices ecosystem for intelligent quiz creation and management with enterprise-grade monitoring, tracing, and resilience.**
 
 ---
 
 ## 🎯 Overview
 
-**QuizCloud** is a production-ready microservices platform that demonstrates enterprise architecture patterns. It provides a complete ecosystem for managing questions, creating quizzes, and delivering interactive assessments at scale.
+QuizCloud is a sophisticated **microservices architecture** designed to deliver scalable quiz management capabilities. It seamlessly combines a **question bank service** with a **quiz creation engine**, unified through a **centralized API gateway** and powered by **distributed tracing**, **metrics collection**, and **circuit breaker resilience**.
 
-### Key Use Cases
-- Online learning and certification platforms
-- Corporate training and skill assessments
-- Competitive examination systems
-- Educational technology solutions
-- Real-time assessment delivery
+### ✨ Core Features
 
----
-
-## ✨ Features
-
-| Feature | Description |
-|---------|-------------|
-| 🎓 **Question Management** | Full CRUD operations with categorization & difficulty levels |
-| 📝 **Quiz Operations** | Create, manage, and execute quizzes with real-time delivery |
-| 🔄 **Service Discovery** | Automatic registration & discovery via Netflix Eureka |
-| 🚪 **API Gateway** | Single entry point with intelligent routing & load balancing |
-| 🔗 **Inter-Service Communication** | Declarative HTTP clients with OpenFeign |
-| 📊 **Advanced Filtering** | Filter questions by category and difficulty |
-| 🗄️ **Data Persistence** | PostgreSQL integration with JPA/Hibernate |
-| 🏗️ **Cloud-Native** | Container-ready with Kubernetes deployment support |
-| ⚡ **High Availability** | Distributed architecture with fault tolerance |
-| 📈 **Scalability** | Horizontal scaling for all services |
+- 🔄 **Service Discovery** - Eureka-based dynamic service registration
+- 🎛️ **Centralized Configuration** - Spring Cloud Config Server with native YAML support
+- 🚪 **API Gateway** - Intelligent request routing and load balancing
+- 📊 **Distributed Tracing** - End-to-end request tracking with Zipkin
+- 📈 **Metrics & Monitoring** - Prometheus + Grafana dashboards
+- 🛡️ **Resilience** - Circuit breakers and rate limiting via Resilience4j
+- 💬 **Inter-Service Communication** - OpenFeign HTTP clients
+- 🗄️ **Data Persistence** - PostgreSQL with Spring Data JPA
+- 🐰 **Async Processing** - RabbitMQ for trace event transport
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
 
-### System Design
-
+```mermaid
+graph TB
+    Client["👤 Client Application"]
+    Gateway["🚪 API Gateway<br/>Port: 8080"]
+    ConfigSrv["⚙️ Config Server<br/>Port: 8888"]
+    Registry["📋 Service Registry<br/>Port: 8761"]
+    Zipkin["🔍 Zipkin Server<br/>Port: 9411"]
+    
+    QuestionSvc["❓ Question Service<br/>Port: 8081"]
+    QuizSvc["📝 Quiz Service<br/>Port: 8082"]
+    
+    RabbitMQ["🐰 RabbitMQ<br/>Port: 5672"]
+    Prometheus["📊 Prometheus<br/>Port: 9090"]
+    Grafana["📈 Grafana<br/>Port: 3000"]
+    
+    QuestionDB["🗄️ PostgreSQL<br/>questiondb"]
+    QuizDB["🗄️ PostgreSQL<br/>quizdb"]
+    
+    Client -->|HTTP/REST| Gateway
+    Gateway -->|Routes /question/**| QuestionSvc
+    Gateway -->|Routes /quiz/**| QuizSvc
+    
+    QuestionSvc -.->|Fetches Config| ConfigSrv
+    QuizSvc -.->|Fetches Config| ConfigSrv
+    Gateway -.->|Fetches Config| ConfigSrv
+    
+    QuestionSvc -.->|Registers| Registry
+    QuizSvc -.->|Registers| Registry
+    Gateway -.->|Discovers Services| Registry
+    
+    QuestionSvc -->|Read/Write| QuestionDB
+    QuizSvc -->|Read/Write| QuizDB
+    
+    QuestionSvc -->|Sends Traces| RabbitMQ
+    QuizSvc -->|Sends Traces| RabbitMQ
+    Gateway -->|Sends Traces| RabbitMQ
+    
+    RabbitMQ -->|Consumes Traces| Zipkin
+    QuestionSvc -->|Metrics| Prometheus
+    QuizSvc -->|Metrics| Prometheus
+    Prometheus -.->|Displays| Grafana
+    
+    style Gateway fill:#FF6B6B
+    style ConfigSrv fill:#4ECDC4
+    style Registry fill:#45B7D1
+    style Zipkin fill:#FFA07A
+    style QuestionSvc fill:#98D8C8
+    style QuizSvc fill:#F7DC6F
+    style RabbitMQ fill:#BB8FCE
+    style Prometheus fill:#85C1E2
+    style Grafana fill:#F8B88B
+    style QuestionDB fill:#5DADE2
+    style QuizDB fill:#5DADE2
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      Client Layer                            │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ▼
-                 ┌─────────────────────┐
-                 │   API Gateway       │
-                 │  (Spring Gateway)   │
-                 │    Port 8765        │
-                 └─────────┬───────────┘
-                           │
-        ┌──────────────────┼──────────────────┐
-        │                  │                  │
-        ▼                  ▼                  ▼
-  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-  │ Question Svc │  │  Quiz Svc    │  │Service Regist│
-  │  Port 8081   │  │  Port 8090   │  │  Port 8761   │
-  └──────┬───────┘  └──────┬───────┘  └──────────────┘
-         │                 │
-         │         ┌───────┴────────┐
-         │         │  OpenFeign     │
-         │         │  HTTP Client   │
-         │         └────────────────┘
-         │
-    ┌────┴──────────────┐
-    │                   │
-    ▼                   ▼
-┌──────────────┐  ┌──────────────┐
-│  PostgreSQL  │  │  PostgreSQL  │
-│ questiondb   │  │   quizdb     │
-└──────────────┘  └──────────────┘
-```
-
-### Service Details
-
-| Service | Port | Purpose | Database |
-|---------|------|---------|----------|
-| Service Registry | 8761 | Eureka - Service Discovery | — |
-| API Gateway | 8765 | Request Routing & Load Balancing | — |
-| Question Service | 8081 | Question Management | `questiondb` |
-| Quiz Service | 8090 | Quiz Operations | `quizdb` |
 
 ---
 
-## 🛠️ Tech Stack
+## 📦 Services Breakdown
 
-| Layer | Technology |
-|-------|-----------|
-| **Language** | Java 17 LTS |
-| **Framework** | Spring Boot 3.5.14 |
-| **Cloud** | Spring Cloud 2025.0.0 |
-| **API Gateway** | Spring Cloud Gateway |
-| **Service Discovery** | Netflix Eureka |
-| **HTTP Client** | OpenFeign |
-| **ORM** | Spring Data JPA + Hibernate |
-| **Database** | PostgreSQL 12+ |
-| **Build Tool** | Maven 3.8+ |
-| **Build** | Maven |
-| **Utilities** | Project Lombok |
+| Service | Path | Port | Database | Key Features |
+|---------|------|------|----------|--------------|
+| **Config Server** | `config-server/` | 8888 | — | Centralized configuration management |
+| **Service Registry** | `service-registry/` | 8761 | — | Eureka service discovery & health monitoring |
+| **API Gateway** | `api-gateway/` | 8080 | — | Request routing, load balancing, trace propagation |
+| **Question Service** | `question-service/` | 8081 | `questiondb` | Question CRUD operations, search, filtering |
+| **Quiz Service** | `quiz-service/` | 8082 | `quizdb` | Quiz creation, submission, OpenFeign integration |
+| **Zipkin Server** | `zipkin-server/` | 9411 | — | Distributed tracing UI & trace collection |
+| **Prometheus** | `monitoring/` | 9090 | — | Metrics aggregation & scraping |
+| **Grafana** | `monitoring/` | 3000 | — | Interactive dashboards & alerts |
+
+---
+
+## 🛠️ Technology Stack
+
+| Category | Technology | Version |
+|----------|-----------|---------|
+| **Language** | Java | 17 |
+| **Framework** | Spring Boot | 3.5.14 |
+| **Cloud Framework** | Spring Cloud | 2025.0.0 |
+| **Service Discovery** | Netflix Eureka | Latest |
+| **API Gateway** | Spring Cloud Gateway | Latest |
+| **Configuration** | Spring Cloud Config | Latest |
+| **Resilience** | Resilience4j | 2.1.0 |
+| **Tracing** | Zipkin + Micrometer | Latest |
+| **Metrics** | Prometheus + Micrometer | Latest |
+| **Message Queue** | RabbitMQ | 3.x |
+| **Database** | PostgreSQL | 13+ |
+| **HTTP Client** | OpenFeign | Latest |
+| **ORM** | Spring Data JPA | Latest |
+| **Build Tool** | Maven | 3.8+ |
+| **Utilities** | Project Lombok | Latest |
 
 ---
 
 ## 📋 Prerequisites
 
-Verify you have the required software installed:
+Before starting the QuizCloud platform, ensure you have the following installed and configured:
+
+### System Requirements
+- ✅ **Java 17+** (LTS recommended)
+- ✅ **Maven 3.8+** (or use included `mvnw` / `mvnw.cmd`)
+- ✅ **PostgreSQL 13+** (running on `localhost:5432`)
+- ✅ **RabbitMQ 3.x** (running on `localhost:5672`)
+- ✅ **Docker & Docker Compose** (for monitoring stack)
+
+### Database Setup
+
+Create the required databases and load initial data:
 
 ```bash
-# Java 17+
-java -version
-
-# Maven 3.8+
-mvn -version
-
-# PostgreSQL 12+
-psql --version
-
-# Git
-git --version
-```
-
-**Optional but recommended:**
-- IntelliJ IDEA / VS Code
-- Postman / Insomnia (API testing)
-- DBeaver / pgAdmin (Database UI)
-
----
-
-## 🚀 Installation
-
-### Step 1: Clone Repository
-
-```bash
-git clone https://github.com/yourusername/quizCloud.git
-cd quizCloud
-```
-
-### Step 2: Install Dependencies
-
-```bash
-mvn clean install
-```
-
-### Step 3: Database Setup
-
-**Start PostgreSQL service:**
-
-```bash
-# Windows
-net start PostgreSQL
-
-# macOS
-brew services start postgresql
-
-# Linux
-sudo systemctl start postgresql
-```
-
-**Create databases:**
-
-```bash
+# Create databases
 psql -U postgres -c "CREATE DATABASE questiondb;"
 psql -U postgres -c "CREATE DATABASE quizdb;"
-```
 
-**Load schema:**
-
-```bash
+# Load question data
 psql -U postgres -d questiondb -f question-table-data.sql
 ```
 
-**Verify installation:**
+### Credentials Configuration
+
+Default PostgreSQL credentials in config files:
+```yaml
+spring.datasource.username: postgres
+spring.datasource.password: password
+```
+
+Update these in:
+- `config-server/configs/question-service.yml`
+- `config-server/configs/quiz-service.yml`
+
+---
+
+## ⚙️ Configuration Management
+
+### Centralized Configuration
+
+All service configurations are managed centrally:
+
+```
+config-server/configs/
+  ├── api-gateway.yml              # Gateway routing & resilience settings
+  ├── question-service.yml         # Question service & database config
+  ├── quiz-service.yml             # Quiz service & OpenFeign clients
+  └── service-registry.yml         # Eureka registry configuration
+```
+
+### Configuration Bootstrap
+
+Each microservice connects to the Config Server via `bootstrap.properties`:
+
+```properties
+spring.cloud.config.uri=http://localhost:8888
+spring.config.import=configserver:http://localhost:8888
+spring.cloud.config.fail-fast=true
+```
+
+⚠️ **Important**: The `fail-fast=true` setting ensures services fail fast if Config Server is unavailable. **Always start the Config Server first!**
+
+---
+
+## 🚀 Quick Start Guide
+
+### Step 1️⃣: Start Infrastructure
 
 ```bash
-psql -U postgres -d questiondb -c "SELECT COUNT(*) FROM question;"
+# RabbitMQ for distributed tracing
+docker run -d --name rabbitmq \
+  -p 5672:5672 \
+  -p 15672:15672 \
+  rabbitmq:3-management
+
+# Optional: Prometheus & Grafana (for metrics)
+cd monitoring
+docker compose up -d
 ```
 
----
+### Step 2️⃣: Start Services in Order
 
-## ⚙️ Configuration
+Use the provided startup scripts or manually start each service:
 
-### Environment Setup
-
-Update credentials in each service's `application.properties` file:
-
-#### Question Service
-**📁 `question-service/src/main/resources/application.properties`**
-
-```properties
-spring.application.name=question-service
-server.port=8081
-spring.datasource.url=jdbc:postgresql://localhost:5432/questiondb
-spring.datasource.username=postgres
-spring.datasource.password=YOUR_PASSWORD
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-eureka.client.service-url.defaultZone=http://localhost:8761/eureka
+**Windows:**
+```batch
+START_SERVICES.bat
 ```
 
-#### Quiz Service
-**📁 `quiz-service/src/main/resources/application.properties`**
-
-```properties
-spring.application.name=quiz-service
-server.port=8090
-spring.datasource.url=jdbc:postgresql://localhost:5432/quizdb
-spring.datasource.username=postgres
-spring.datasource.password=YOUR_PASSWORD
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-eureka.client.service-url.defaultZone=http://localhost:8761/eureka
+**Linux/macOS:**
+```bash
+chmod +x START_SERVICES.sh
+./START_SERVICES.sh
 ```
 
-#### API Gateway
-**📁 `api-gateway/src/main/resources/application.properties`**
+**Manual (recommended for troubleshooting):**
 
-```properties
-spring.application.name=api-gateway
-server.port=8765
-spring.cloud.gateway.discovery.locator.enabled=true
-spring.cloud.gateway.discovery.locator.lower-case-service-id=true
-eureka.client.service-url.defaultZone=http://localhost:8761/eureka
+Terminal 1 - Config Server:
+```bash
+cd config-server
+mvn spring-boot:run
+# Wait 10-15 seconds for startup
 ```
 
-#### Service Registry
-**📁 `service-registry/src/main/resources/application.properties`**
-
-```properties
-spring.application.name=service-registry
-server.port=8761
-eureka.instance.hostname=localhost
-eureka.client.fetch-registry=false
-eureka.client.register-with-eureka=false
-```
-
-> ⚠️ **SECURITY WARNING**: Store sensitive credentials in environment variables, not in git.
-
----
-
-## ▶️ Running Services
-
-### Startup Order
-
-Services must start in this sequence for proper service discovery:
-
-#### 1️⃣ Service Registry (Eureka)
-
+Terminal 2 - Service Registry:
 ```bash
 cd service-registry
 mvn spring-boot:run
+# Wait 8-10 seconds
 ```
 
-✅ **Expected:** Service available at `http://localhost:8761`
+Terminal 3 - Zipkin Server:
+```bash
+cd zipkin-server
+mvn spring-boot:run
+# Wait 5-8 seconds
+```
 
-#### 2️⃣ Question Service
-
+Terminal 4 - Question Service:
 ```bash
 cd question-service
 mvn spring-boot:run
+# Wait 5-8 seconds
 ```
 
-✅ **Expected:** Service available at `http://localhost:8081`
-
-#### 3️⃣ Quiz Service
-
+Terminal 5 - Quiz Service:
 ```bash
 cd quiz-service
 mvn spring-boot:run
+# Wait 5-8 seconds
 ```
 
-✅ **Expected:** Service available at `http://localhost:8090`
-
-#### 4️⃣ API Gateway
-
+Terminal 6 - API Gateway:
 ```bash
 cd api-gateway
 mvn spring-boot:run
 ```
 
-✅ **Expected:** Service available at `http://localhost:8765`
+---
 
-### Parallel Startup (4 Terminals)
+## 🔍 Health Checks & URLs
 
-Open 4 separate terminal windows:
-
-```bash
-# Terminal 1
-cd service-registry && mvn spring-boot:run
-```
+### Service Health
 
 ```bash
-# Terminal 2
-cd question-service && mvn spring-boot:run
-```
+# Config Server
+curl http://localhost:8888/actuator/health
 
-```bash
-# Terminal 3
-cd quiz-service && mvn spring-boot:run
-```
-
-```bash
-# Terminal 4
-cd api-gateway && mvn spring-boot:run
-```
-
-### Verification
-
-**Check Eureka Dashboard:**
-
-```bash
+# Service Registry (Eureka)
 curl http://localhost:8761/eureka/apps
-```
 
-**Health Checks:**
+# API Gateway
+curl http://localhost:8080/actuator/health
 
-```bash
-curl http://localhost:8761/actuator/health
+# Question Service
 curl http://localhost:8081/actuator/health
-curl http://localhost:8090/actuator/health
-curl http://localhost:8765/actuator/health
+
+# Quiz Service
+curl http://localhost:8082/actuator/health
+
+# Zipkin Server
+curl http://localhost:9411/health
 ```
 
-**Access Eureka UI:**
-Open browser → `http://localhost:8761`
+### Dashboard URLs
+
+| Dashboard | URL | Credentials |
+|-----------|-----|-------------|
+| 📋 **Eureka Service Registry** | http://localhost:8761 | — |
+| 🔍 **Zipkin Tracing** | http://localhost:9411 | — |
+| 📊 **Prometheus Metrics** | http://localhost:9090 | — |
+| 📈 **Grafana Dashboards** | http://localhost:3000 | `admin` / `admin` |
+| 🐰 **RabbitMQ Management** | http://localhost:15672 | `guest` / `guest` |
 
 ---
 
-## 📡 API Reference
+## 📞 API Endpoints
 
-### Base URL
-
-```
-http://localhost:8765
-```
-
-### Question Service APIs
-
-#### Retrieve All Questions
+### Question Service (via Gateway)
 
 ```bash
-GET /question-service/questions
+# Get all questions
+curl http://localhost:8080/question/all
+
+# Get question by ID
+curl http://localhost:8080/question/{id}
 ```
 
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "questionTitle": "Which Java keyword is used to create a subclass?",
-    "option1": "class",
-    "option2": "interface",
-    "option3": "extends",
-    "option4": "implements",
-    "rightAnswer": "extends",
-    "category": "JAVA",
-    "difficultylevel": "Easy"
-  }
-]
-```
-
-#### Get Question by ID
+### Quiz Service (via Gateway)
 
 ```bash
-GET /question-service/questions/{id}
+# Create quiz
+curl -X POST http://localhost:8080/quiz/create
+
+# Get quiz by ID
+curl http://localhost:8080/quiz/{id}
+
+# Submit quiz
+curl -X POST http://localhost:8080/quiz/submit
 ```
-
-#### Filter by Category
-
-```bash
-GET /question-service/questions/category/{category}
-```
-
-#### Create Question
-
-```bash
-POST /question-service/questions
-Content-Type: application/json
-
-{
-  "questionTitle": "Your question?",
-  "option1": "Option 1",
-  "option2": "Option 2",
-  "option3": "Option 3",
-  "option4": "Option 4",
-  "rightAnswer": "Option 1",
-  "category": "JAVA",
-  "difficultylevel": "Easy"
-}
-```
-
-#### Update Question
-
-```bash
-PUT /question-service/questions/{id}
-Content-Type: application/json
-
-{
-  "questionTitle": "Updated question?",
-  "option1": "Option 1",
-  ...
-}
-```
-
-#### Delete Question
-
-```bash
-DELETE /question-service/questions/{id}
-```
-
-### Quiz Service APIs
-
-#### Retrieve All Quizzes
-
-```bash
-GET /quiz-service/quizzes
-```
-
-#### Get Quiz by ID
-
-```bash
-GET /quiz-service/quizzes/{id}
-```
-
-#### Create Quiz
-
-```bash
-POST /quiz-service/quizzes
-Content-Type: application/json
-
-{
-  "title": "Java Basics",
-  "description": "Test your Java knowledge",
-  "category": "JAVA",
-  "numOfQuestions": 10
-}
-```
-
-#### Update Quiz
-
-```bash
-PUT /quiz-service/quizzes/{id}
-Content-Type: application/json
-
-{
-  "title": "Updated Title",
-  ...
-}
-```
-
-#### Delete Quiz
-
-```bash
-DELETE /quiz-service/quizzes/{id}
-```
-
-#### Get Quiz Questions
-
-```bash
-GET /quiz-service/quizzes/{id}/questions
-```
-
----
-
-## 💻 Development
-
-### Build Commands
-
-```bash
-# Clean and build all services
-mvn clean install
-
-# Build specific service
-mvn clean install -f question-service/pom.xml
-
-# Skip tests
-mvn clean install -DskipTests
-
-# Compile only
-mvn compile
-```
-
-### Testing
-
-```bash
-# Run all tests
-mvn test
-
-# Test specific service
-mvn test -f question-service/pom.xml
-
-# Test with coverage
-mvn test jacoco:report
-```
-
-### IDE Setup
-
-**IntelliJ IDEA:**
-1. Open project root directory
-2. Right-click `pom.xml` → Add as Maven Project
-3. Wait for indexing to complete
-
-**VS Code:**
-1. Install "Extension Pack for Java"
-2. Install "Spring Boot Extension Pack"
-3. Open the workspace folder
-
-### Debug Mode
-
-```bash
-cd question-service
-mvn spring-boot:run -Dspring-boot.run.arguments="--debug"
-```
-
----
-
-## 📋 Project Structure
-
-```
-quizCloud/
-├── service-registry/              # Eureka Server (Port 8761)
-│   ├── src/main/java/com/uv/serviceregistry/
-│   └── src/main/resources/application.properties
-│
-├── api-gateway/                   # API Gateway (Port 8765)
-│   ├── src/main/java/com/uv/apigateway/
-│   └── src/main/resources/application.properties
-│
-├── question-service/              # Question APIs (Port 8081)
-│   ├── src/main/java/com/uv/questionservice/
-│   │   ├── controller/
-│   │   ├── service/
-│   │   ├── dao/
-│   │   └── model/
-│   └── src/main/resources/application.properties
-│
-├── quiz-service/                  # Quiz APIs (Port 8090)
-│   ├── src/main/java/com/uv/quizservice/
-│   │   ├── controller/
-│   │   ├── service/
-│   │   ├── dao/
-│   │   ├── feign/
-│   │   └── model/
-│   └── src/main/resources/application.properties
-│
-├── question-table-data.sql        # Database schema & sample data
-├── README.md                      # This file
-└── pom.xml                        # Parent POM
-```
-
----
-
-## 🔗 Service Communication
-
-### OpenFeign Client Pattern
-
-Quiz Service communicates with Question Service using **OpenFeign**:
-
-```java
-@FeignClient(name = "question-service")
-public interface QuestionClient {
-    @GetMapping("/questions")
-    List<Question> getAllQuestions();
-    
-    @GetMapping("/questions/{id}")
-    Question getQuestionById(@PathVariable Long id);
-    
-    @GetMapping("/questions/category/{category}")
-    List<Question> getQuestionsByCategory(@PathVariable String category);
-}
-```
-
-**Advantages:**
-- ✅ Service discovery via Eureka
-- ✅ Client-side load balancing
-- ✅ Built-in resilience
-- ✅ Declarative API
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Port Already in Use
+### Service Won't Start
 
-```bash
-# Windows - Find process on port 8761
-netstat -ano | findstr :8761
-
-# Kill process
-taskkill /PID <PID> /F
-
-# macOS/Linux - Find process
-lsof -i :8761
-
-# Kill process
-kill -9 <PID>
+**Problem:** Service fails to connect to Config Server
+```
+ConfigClientFailFastException: Could not locate PropertySource
 ```
 
-### PostgreSQL Connection Failed
+**Solution:** 
+1. Ensure Config Server is running on port 8888
+2. Add 10-second delay before starting dependent services
+3. Check network connectivity: `curl http://localhost:8888/actuator/health`
 
-```bash
-# Check PostgreSQL status
-# Windows
-Get-Service postgresql*
+### Database Connection Errors
 
-# Verify database exists
-psql -U postgres -c "\l"
+**Problem:** `PSQLException: Connection refused`
 
-# Test connection
-psql -U postgres -d questiondb -c "SELECT 1;"
-```
+**Solution:**
+1. Verify PostgreSQL is running: `psql -U postgres -c "\l"`
+2. Check credentials in config files match your PostgreSQL setup
+3. Ensure databases exist: `question-table-data.sql` is loaded
 
-### Services Not Registering with Eureka
+### RabbitMQ Connection Issues
 
-```bash
-# Check Eureka Dashboard
-curl http://localhost:8761/eureka/apps
+**Problem:** Services can't connect to RabbitMQ
 
-# Verify application.properties has eureka endpoint
-# Restart the service
-```
-
-### Maven Build Errors
-
-```bash
-# Update Maven dependencies
-mvn clean install -U
-
-# Clear local cache
-rm -rf ~/.m2/repository
-
-# Rebuild
-mvn clean install
-```
-
-### Service Connection Issues
-
-```bash
-# Verify all services are running
-curl http://localhost:8761/actuator/health
-curl http://localhost:8081/actuator/health
-curl http://localhost:8090/actuator/health
-curl http://localhost:8765/actuator/health
-
-# Check Eureka registration
-curl http://localhost:8761/eureka/apps/QUESTION-SERVICE
-```
+**Solution:**
+1. Verify RabbitMQ container is running: `docker ps | grep rabbitmq`
+2. Restart: `docker stop rabbitmq && docker start rabbitmq`
+3. Check management UI: http://localhost:15672
 
 ---
 
-## 📊 Project Statistics
+## 📚 Documentation
 
-- **Microservices**: 4 independent services
-- **Databases**: 2 PostgreSQL instances
-- **REST Endpoints**: 10+ endpoints
-- **Java Version**: 17 LTS
-- **Spring Boot**: 3.5.14
-- **Spring Cloud**: 2025.0.0
+- [Infrastructure Setup Guide](INFRASTRUCTURE_SETUP.md)
+- [Setup Completion Status](SETUP_COMPLETE.md)
+- [Service Startup Scripts](START_SERVICES.bat)
 
 ---
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create feature branch: `git checkout -b feature/your-feature`
-3. Commit changes: `git commit -m 'Add feature'`
-4. Push branch: `git push origin feature/your-feature`
-5. Open Pull Request
-
-### Code Standards
-- Follow Google Java Style Guide
-- Add unit tests for new features
-- Include JavaDoc for public APIs
-- Keep methods single-responsibility
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License** - see LICENSE file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 
-## 👨‍💼 Author
+## 🙋‍♂️ Support
 
-**Yuvraj** - Project Development & Architecture
+For issues, questions, or suggestions:
+- Open an issue on GitHub
+- Check existing issues for solutions
+- Refer to [Troubleshooting](#-troubleshooting) section
 
 ---
 
-<div align="center">
+**Happy Quizzing! 🎯✨**
 
-Made with 💡 for modern cloud-native development
+- If a client service fails immediately, check that Config Server is running on port `8888`.
+- If services do not appear in Eureka, check `http://localhost:8761` and the `eureka.client.service-url.defaultZone` values in `config-server/configs`.
+- If database startup fails, confirm `questiondb` and `quizdb` exist and credentials match the config files.
+- If Prometheus targets are down, confirm the Java services are running on the host and Docker can resolve `host.docker.internal`.
+- If traces do not appear in Zipkin, confirm RabbitMQ and Zipkin are both running.
 
-⭐ **Like this project? Give it a star!**
-
-</div>

@@ -1,112 +1,125 @@
 @echo off
-REM QuizCloud Microservices Startup Guide - Windows
-REM This script demonstrates the order to start all services
+REM ============================================================================
+REM QuizCloud Microservices Launcher - Windows
+REM ============================================================================
+REM This script starts all QuizCloud services in the correct order
+REM Each service runs in its own terminal window for easy monitoring
+REM ============================================================================
+
+setlocal enabledelayedexpansion
+cd /d "%~dp0"
 
 cls
 echo.
-echo ==========================================
-echo QuizCloud Microservices Startup Guide
-echo ==========================================
+echo ============================================================================
+echo     ^^|^|  QuizCloud Microservices Platform - Windows Launcher  ^^|^|
+echo ============================================================================
+echo.
+echo 🔵 Starting QuizCloud services in the correct sequence...
 echo.
 
-echo PREREQUISITES:
-echo 1. RabbitMQ must be running on localhost:5672
-echo 2. PostgreSQL must be running on localhost:5432
-echo 3. Java 17 must be installed
-echo 4. Each service needs a separate terminal window
+REM ============================================================================
+REM Display Prerequisites Check
+REM ============================================================================
+echo ✓ Prerequisites Check:
+echo.
+echo   [✓] PostgreSQL running on localhost:5432 with:
+echo       - Database: questiondb (with data)
+echo       - Database: quizdb
+echo       - Credentials: postgres/password
+echo.
+echo   [✓] RabbitMQ running on localhost:5672
+echo       To start: docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+echo.
+echo   [✓] Java 17+ and Maven available
+echo       To verify: java -version ^&^& mvn -version
+echo.
+echo   [?] Optional - Prometheus/Grafana monitoring stack
+echo       To start: cd monitoring ^&^& docker compose up -d
 echo.
 
-echo STARTUP SEQUENCE:
-echo.
+REM ============================================================================
+REM Service Startup with Delays
+REM ============================================================================
 
-echo Step 1: Start Config Server (Port: 8888)
-echo Command: cd config-server ^&^& mvnw.cmd spring-boot:run
-echo Wait for: 'Started ConfigServerApplication'
-echo.
+echo ============================================================================
+echo Phase 1: Starting Config Server (Port 8888)
+echo ============================================================================
+START "🟢 Config Server :8888" cmd /k "cd /d !CD!\config-server && color 0A && echo [Config Server Starting...] && mvn spring-boot:run"
+timeout /t 12 /nobreak >nul
 
-echo Step 2: Start Service Registry/Eureka (Port: 8761)
-echo Command: cd service-registry ^&^& mvnw.cmd spring-boot:run
-echo Wait for: 'Started ServiceRegistryApplication'
-echo Dashboard: http://localhost:8761
 echo.
+echo ============================================================================
+echo Phase 2: Starting Service Registry (Port 8761)
+echo ============================================================================
+START "🟡 Service Registry :8761" cmd /k "cd /d !CD!\service-registry && color 0B && echo [Service Registry Starting...] && mvn spring-boot:run"
+timeout /t 10 /nobreak >nul
 
-echo Step 3: Start Zipkin Server (Port: 9411)
-echo Command: cd zipkin-server ^&^& mvnw.cmd spring-boot:run
-echo Wait for: 'Started ZipkinServerApplication'
-echo Dashboard: http://localhost:9411/zipkin/
 echo.
+echo ============================================================================
+echo Phase 3: Starting Zipkin Server (Port 9411)
+echo ============================================================================
+START "🟣 Zipkin Server :9411" cmd /k "cd /d !CD!\zipkin-server && color 0E && echo [Zipkin Server Starting...] && mvn spring-boot:run"
+timeout /t 8 /nobreak >nul
 
-echo Step 4: Start API Gateway (Port: 8080)
-echo Command: cd api-gateway ^&^& mvnw.cmd spring-boot:run
-echo Wait for: 'Netty started with reactor.netty.http.server.HttpServer'
 echo.
+echo ============================================================================
+echo Phase 4: Starting Question Service (Port 8081)
+echo ============================================================================
+START "🔵 Question Service :8081" cmd /k "cd /d !CD!\question-service && color 0C && echo [Question Service Starting...] && mvn spring-boot:run"
+timeout /t 5 /nobreak >nul
 
-echo Step 5: Start Question Service (Port: 8081)
-echo Command: cd question-service ^&^& mvnw.cmd spring-boot:run
-echo Wait for: 'Started QuestionServiceApplication'
 echo.
+echo ============================================================================
+echo Phase 5: Starting Quiz Service (Port 8082)
+echo ============================================================================
+START "🟠 Quiz Service :8082" cmd /k "cd /d !CD!\quiz-service && color 03 && echo [Quiz Service Starting...] && mvn spring-boot:run"
+timeout /t 5 /nobreak >nul
 
-echo Step 6: Start Quiz Service (Port: 8082)
-echo Command: cd quiz-service ^&^& mvnw.cmd spring-boot:run
-echo Wait for: 'Started QuizServiceApplication'
 echo.
+echo ============================================================================
+echo Phase 6: Starting API Gateway (Port 8080)
+echo ============================================================================
+START "🔴 API Gateway :8080" cmd /k "cd /d !CD!\api-gateway && color 0D && echo [API Gateway Starting...] && mvn spring-boot:run"
 
-echo ==========================================
-echo VERIFICATION
-echo ==========================================
 echo.
-echo After all services are running, verify in your browser:
+echo ============================================================================
+echo ✨ QuizCloud Services Launch Complete!
+echo ============================================================================
 echo.
-echo 1. Config Server Health:
-echo    http://localhost:8888/actuator/health
+echo 📊 Monitoring & Dashboards:
 echo.
-echo 2. Eureka Dashboard:
-echo    http://localhost:8761/
+echo   📋 Eureka Service Registry:   http://localhost:8761
+echo   🔍 Zipkin Distributed Tracing: http://localhost:9411
+echo   📊 Prometheus Metrics:         http://localhost:9090
+echo   📈 Grafana Dashboards:         http://localhost:3000 (admin/admin)
+echo   🐰 RabbitMQ Management:        http://localhost:15672 (guest/guest)
 echo.
-echo 3. Service Endpoints:
-echo    - API Gateway: http://localhost:8080/actuator/health
-echo    - Question Service: http://localhost:8081/actuator/health
-echo    - Quiz Service: http://localhost:8082/actuator/health
+echo 🏥 Health Checks:
 echo.
-echo 4. Zipkin Tracing:
-echo    http://localhost:9411/zipkin/
+echo   curl http://localhost:8888/actuator/health      (Config Server)
+echo   curl http://localhost:8761/eureka/apps          (Service Registry)
+echo   curl http://localhost:8080/actuator/health      (API Gateway)
+echo   curl http://localhost:8081/actuator/health      (Question Service)
+echo   curl http://localhost:8082/actuator/health      (Quiz Service)
 echo.
-
-echo ==========================================
-echo QUICK LAUNCH COMMANDS (copy-paste ready)
-echo ==========================================
+echo ⏳ Please wait 30-60 seconds for all services to fully boot.
+echo 📝 Each service will open in its own window above.
 echo.
-echo For Config Server:
-echo   START cmd /k "cd config-server && mvnw.cmd spring-boot:run"
+echo 🚀 Happy quizzing! 🎯✨
 echo.
-echo For Service Registry:
-echo   START cmd /k "cd service-registry && mvnw.cmd spring-boot:run"
-echo.
-echo For Zipkin Server:
-echo   START cmd /k "cd zipkin-server && mvnw.cmd spring-boot:run"
-echo.
-echo For API Gateway:
-echo   START cmd /k "cd api-gateway && mvnw.cmd spring-boot:run"
-echo.
-echo For Question Service:
-echo   START cmd /k "cd question-service && mvnw.cmd spring-boot:run"
-echo.
-echo For Quiz Service:
-echo   START cmd /k "cd quiz-service && mvnw.cmd spring-boot:run"
-echo.
-
-echo ==========================================
-echo USEFUL COMMANDS (for PowerShell or CMD)
-echo ==========================================
-echo.
-echo View all services in Eureka:
-echo   curl http://localhost:8761/eureka/apps
-echo.
-echo Get API Gateway configuration:
-echo   curl http://localhost:8888/api-gateway/default
-echo.
-echo API Gateway Health:
-echo   curl http://localhost:8080/actuator/health
+echo ============================================================================
 echo.
 
 pause
+endlocal
+echo   API Gateway:   http://localhost:8080/actuator/health
+echo   Question:      http://localhost:8081/actuator/health
+echo   Quiz:          http://localhost:8082/actuator/health
+echo   Zipkin:        http://localhost:9411/zipkin/
+echo   Prometheus:    http://localhost:9090
+echo   Grafana:       http://localhost:3000
+echo.
+
+pause
+

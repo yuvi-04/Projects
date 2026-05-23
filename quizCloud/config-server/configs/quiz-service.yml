@@ -28,6 +28,10 @@ management:
     web:
       exposure:
         include: '*'
+  metrics:
+    export:
+      prometheus:
+        enabled: true
   endpoint:
     health:
       show-details: always
@@ -45,3 +49,22 @@ logging:
     root: INFO
     org.springframework: INFO
     com.uv: DEBUG
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowType: TIME
+        slidingWindowSize: 60
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+    instances:
+      questionService:
+        baseConfig: default
+  ratelimiter:
+    instances:
+      questionService:
+        limitForPeriod: 10
+        limitRefreshPeriod: 1s
+        timeoutDuration: 0

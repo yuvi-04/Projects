@@ -1,7 +1,7 @@
 package com.uv.quizservice.service;
 
 import com.uv.quizservice.dao.QuizDao;
-import com.uv.quizservice.feign.QuizInterface;
+import com.uv.quizservice.service.QuizClientService;
 import com.uv.quizservice.model.QuestionWrapper;
 import com.uv.quizservice.model.Quiz;
 import com.uv.quizservice.model.Response;
@@ -18,12 +18,12 @@ public class QuizService {
     QuizDao quizDao;
 
     @Autowired
-    QuizInterface quizInterface;
+    QuizClientService quizClientService;
 
 
     public ResponseEntity<String> createQuiz(String category, int numQ, String title) {
 
-        List<Integer> questions = quizInterface.getQuestionsForQuiz(category, numQ).getBody();
+        List<Integer> questions = quizClientService.getQuestionsForQuiz(category, numQ).getBody();
         Quiz quiz = new Quiz();
         quiz.setTitle(title);
         quiz.setQuestionIds(questions);
@@ -36,13 +36,13 @@ public class QuizService {
     public ResponseEntity<List<QuestionWrapper>> getQuizQuestions(Integer id) {
           Quiz quiz = quizDao.findById(id).get();
           List<Integer> questionIds = quiz.getQuestionIds();
-          ResponseEntity<List<QuestionWrapper>> questions = quizInterface.getQuestionsFromId(questionIds);
+          ResponseEntity<List<QuestionWrapper>> questions = quizClientService.getQuestionsFromId(questionIds);
           return questions;
 
     }
 
     public ResponseEntity<Integer> calculateResult(Integer id, List<Response> responses) {
-        ResponseEntity<Integer> score = quizInterface.getScore(responses);
+        ResponseEntity<Integer> score = quizClientService.getScore(responses);
         return score;
     }
 }
